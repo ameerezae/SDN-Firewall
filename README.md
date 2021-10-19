@@ -10,7 +10,7 @@ but i am using `mininet Version2.3.0` which is accessible from [here](https://gi
 ### Part2 Result
 for part2 result of executing commands are shown below:
 1. `pingall` command. that host No.1 and host No.4 can ping each other as well as host No.2 and host No.3 .
-<img src="./pingall2.png" alt="pingall2">
+<img src="shots/pingall2.png" alt="pingall2">
    
 
 2. `iperf` command. command will hang cause we blocked IP traffic.
