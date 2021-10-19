@@ -10,33 +10,32 @@ but i am using `mininet Version2.3.0` which is accessible from [here](https://gi
 ### Part2 Result
 for part2 result of executing commands are shown below:
 1. `pingall` command. that host No.1 and host No.4 can ping each other as well as host No.2 and host No.3 .
-\
 <img src="./pingall2.png" alt="pingall2">
    
 
 2. `iperf` command. command will hang cause we blocked IP traffic.
-\
+
 <img src="./iperf2.png" alt="iperf2">
    
 
 3. `dpctl dump-flows` command. for showing switche flow table rules.
-\
+
 <img src="./dpctl2.png" alt="dpctl2">
    
 ### Part3 Result
 for part3 result of executing commands are shown below:
 1. `pingall` command. that untrusted host can not ping non of hosts.
-\
+
 <img src="./pingall3.png" alt="pingall3">
    
 
 2. `iperf` command. that untrusted host can not send traffic to server and command will hang.
-\
+
 <img src="./iperf3.png" alt="iperf3">
    
 
 3. `dpctl dump-flows` command. for showing switches flow table rules.
-\
+
 <img src="./dpctl3.png" alt="dpctl3">
    
 
