@@ -37,6 +37,14 @@ class Part4Controller(object):
             print("UNKNOWN SWITCH")
             exit(1)
 
+    def _handle_ConnectionUp(self, event):
+        # handle ARP
+        fm = of.ofp_flow_mod()
+        fm.priority = 33001
+        fm.match.dl_type = 0x0806
+        fm.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+        event.connection.send(fm)
+
     def _handle_PacketIn(self, event):
         """
     Packets not handled by the router rules will be
@@ -50,61 +58,22 @@ class Part4Controller(object):
 
         packet_in = event.ofp  # The actual ofp_packet_in message.
 
-        if self._is_arp(packet):  # handle ARP traffic?
-            self._handle_ARP(packet, event)
-        else:  # learn and forward?
-            self._forward_to_switch(packet, event)
+        # if self._is_arp(packet):  # handle ARP traffic?
+        #     self._handle_ARP(packet, event)
+        # else:  # learn and forward?
+        self._forward_to_switch(packet, event)
 
         # print('Unhandled packet from ' + str(self.connection.dpid) + ':' + packet.dump())
 
     # learns port/MAC info, if new, otherwise, updates known
-    def _update(self, inport, packet, arp=False):
-        if arp:
-            src = packet.next.protosrc
-        else:
-            src = packet.next.srcip
+    def _update(self, inport, packet):
+        src = packet.next.srcip
         if src in self._table and self._table[src] != (packet.src, inport):
             print(f"Re-learned {src}")  # update info
         elif src not in self._table:
             print(f"Learned {str(src)}")  # new dst to learn
         self._table[src] = (packet.src, inport)
         print(self._table)
-
-    def _is_arp(self, p):
-        return p.type == p.ARP_TYPE
-
-    def _handle_ARP(self, p, event):
-        a = p.next
-        msg = 'request' if a.opcode == 1 else 'reply'
-        print(f"Got ARP {msg} from {str(a.protosrc)} to {str(a.protodst)}")
-        self._update(event.port, p, arp=True)
-        self._reply(p, event)
-
-    def _reply(self, p, event):
-        me = event.connection.dpid
-        a = p.next
-        r = pkt.arp()
-        r.hwtype = a.hwtype
-        r.prototype = a.prototype
-        r.hwlen = a.hwlen
-        r.protolen = a.protolen
-        r.opcode = pkt.arp.REPLY
-        r.hwdst = a.hwsrc
-        r.protodst = a.protosrc
-        r.protosrc = a.protodst
-        r.hwsrc = p.src
-        e = pkt.ethernet(type=p.type, src=self.
-                         dpid_to_mac(me), dst=a.hwsrc)
-        e.set_payload(r)
-        msg = of.ofp_packet_out()
-        msg.data = e.pack()
-        msg.actions.append(of.ofp_action_output(port=of.OFPP_IN_PORT))
-        msg.in_port = event.port
-        event.connection.send(msg)
-        print("Replied to ARP request for " + str(r.protosrc))
-
-    def dpid_to_mac(self, dpid):
-        return EthAddr("%012x" % (dpid & 0xffFFffFFffFF,))
 
     # forward this packet to its destaination, and add to the flow table
     def _forward_to_switch(self, p, event):
