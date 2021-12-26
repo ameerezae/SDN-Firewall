@@ -141,6 +141,7 @@ cython_debug/
 #!pox/pox/misc
 
 pox/*
+!pox/policy.txt
 !pox/pox/
 pox/pox/*
 !pox/pox/misc
