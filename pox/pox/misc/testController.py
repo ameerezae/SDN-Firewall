@@ -73,7 +73,7 @@ class Part4Controller(object):
         elif src not in self._table:
             print(f"Learned {str(src)}")  # new dst to learn
         self._table[src] = (packet.src, inport)
-        print(self._table)
+        # print(self._table)
 
     # forward this packet to its destaination, and add to the flow table
     def _forward_to_switch(self, p, event):
@@ -87,6 +87,7 @@ class Part4Controller(object):
             if isinstance(dest, IPAddr6):
                 dest = self._find_by_port(event.port)
             dst = (self._table[dest][-1], self._table[dest][0])  # port, mac
+            # print(type(p.payload.payload.srcport))
 
             if dst[0] == event.port:  # through in-port?
                 log.warning("Not sending packet back out of in-port " + str(event.port))
@@ -94,8 +95,12 @@ class Part4Controller(object):
                 do = [of.ofp_action_dl_addr.set_dst(dst[1]),  # MAC addr of dest
                       of.ofp_action_output(port=dst[0])]  # the port to dest
                 want = of.ofp_match.from_packet(p, event.port)
-                if p.next.srcip == "10.0.0.1" and p.next.dstip == "10.0.0.2" and self.allow == False:
-                    print('cant')
+                if p.next.srcip == "10.0.0.1" and \
+                        p.payload.payload.srcport == 78 and \
+                        p.next.dstip == "10.0.0.2" and \
+                        p.payload.payload.dstport == 5566 and \
+                        self.allow == False:
+                    print('#################################################################3')
                 else:
                     conn.send(of.ofp_flow_mod(command=of.OFPFC_ADD,  # learn new rule
                                               idle_timeout=10,  # from l3learning.py
@@ -103,7 +108,10 @@ class Part4Controller(object):
                                               buffer_id=event.ofp.buffer_id,
                                               actions=do,
                                               match=want))
-                    if p.next.srcip == "10.0.0.2" and p.next.dstip == "10.0.0.1":
+                    if p.next.srcip == "10.0.0.2" and \
+                            p.payload.payload.srcport == 78 and \
+                            p.next.dstip == "10.0.0.1" and \
+                            p.payload.payload.dstport == 5566:
                         self.allow = True
                     log.info('Added flow rule: traffic to ' + str(dest) + ' via ' + str(dst[0]))
 
